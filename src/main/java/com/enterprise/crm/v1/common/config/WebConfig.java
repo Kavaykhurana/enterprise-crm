@@ -11,7 +11,7 @@ public class WebConfig implements WebMvcConfigurer {
     public void addCorsMappings(CorsRegistry registry) {
         System.out.println("WEB_CONFIG: registering CORS mappings!");
         registry.addMapping("/**")
-                .allowedOrigins("https://enterprise-crm-mu.vercel.app", "http://localhost:5173", "http://localhost:5174")
+                .allowedOriginPatterns("*")
                 .allowedMethods("GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH")
                 .allowedHeaders("Authorization", "Content-Type", "X-Correlation-ID", "Accept", "Origin")
                 .exposedHeaders("X-Correlation-ID")
