@@ -21,6 +21,8 @@ public class CustomCorsFilter implements Filter {
         HttpServletResponse response = (HttpServletResponse) res;
         HttpServletRequest request = (HttpServletRequest) req;
 
+        System.out.println("CUSTOM_CORS_FILTER: Method=" + request.getMethod() + ", URI=" + request.getRequestURI() + ", Origin=" + request.getHeader("Origin"));
+
         String origin = request.getHeader("Origin");
         if (origin != null && (origin.equals("https://enterprise-crm-mu.vercel.app") || origin.equals("http://localhost:5173") || origin.equals("http://localhost:5174"))) {
             response.setHeader("Access-Control-Allow-Origin", origin);
