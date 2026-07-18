@@ -18,7 +18,7 @@ Unlike standard random UUID v4, this system implements **UUID v7** for all prima
 ### 2. Double-Token Auth & Refresh Token Rotation (RTR)
 *   **Access Token**: Short-lived (15 min) JWT containing user attributes, roles, and a `tokenVersion`.
 *   **Refresh Token**: Long-lived (7 days) random string stored securely as a **SHA-256 hash** in the database.
-*   **Rotation (RTR)**: Every refresh request invalidates the current token and issues a new pair. If a revoked refresh token is reused, the system automatically flags it as a breach, increments the user's `tokenVersion` to immediately invalidate all existing access tokens, and deletes all user sessions.
+*   **Rotation (RTR)**: Every refresh request invalidates the current token and issues a new pair. If a revoked refresh token is reused, the system flags it as a breach, increments the user's `tokenVersion` to immediately invalidate all existing access tokens, and deletes all user sessions.
 
 ### 3. Token Versioning & Instant Revocation
 We maintain a `token_version` column on the `User` aggregate. This version is signed inside the JWT. If a user changes their password, changes roles, gets deactivated, or signs out, the version is incremented. All previously issued JWTs are rejected immediately by filters without needing a persistent blacklist store.
@@ -29,8 +29,16 @@ Protects authentication endpoints from credential stuffing:
 *   Lockout expiration is set for **15 minutes** (`account_locked_until`).
 *   Subsequent attempts during lockout return a standard locked error message.
 
-### 5. Decoupled Spring Event Auditing
-Write services publish Spring `ApplicationEvent` subclasses. Asynchronous `@TransactionalEventListener` classes handle these events only **after** the transaction commits successfully (`TransactionPhase.AFTER_COMMIT`). This ensures logs are decoupled from core business flows and never written for rolled-back operations.
+### 5. Polymorphic Task & Recurrence Engine
+*   **Polymorphic Links**: Tasks can bind dynamically to different aggregates (`CUSTOMER`, `LEAD`) using a soft polymorphism reference verified at the service layer.
+*   **Recurrence Engine**: Supports automatic task spawning (e.g. `DAILY`, `WEEKLY`, `MONTHLY`). When a recurring task is completed (`status = COMPLETED`), the system automatically schedules the next instance with an updated due date.
+
+### 6. Decoupled Event-Driven Timeline (JSONB Logs)
+Core services publish Spring `ApplicationEvent` subclasses. Asynchronous `@TransactionalEventListener` classes capture these events **after** the transaction commits successfully (`TransactionPhase.AFTER_COMMIT`). This ensures logs are decoupled from core business flows and never written for rolled-back operations, persisting a historical timeline in PostgreSQL.
+
+### 7. RBAC Personalized KPI Dashboards
+*   **Personalization**: When a `SALES_EXECUTIVE` fetches dashboard metrics, calculations (win rates, conversion rates, pipeline weighted value, overdue tasks count) are restricted only to records they own.
+*   **Global Access**: `SALES_MANAGER` and `ADMIN` users receive global aggregates.
 
 ---
 
@@ -51,25 +59,14 @@ Write services publish Spring `ApplicationEvent` subclasses. Asynchronous `@Tran
 com.enterprise.crm.v1
 ├── auth/          # Registration, JWT validation, refresh, lockout rules
 ├── user/          # User management, session tracking logs
-├── customer/      # Customer aggregate, contacts, addresses
+├── customer/      # Customer aggregate, contacts, addresses, specification search
 ├── lead/          # Lead state machine, conversion service
 ├── opportunity/   # Revenue and opportunity sales pipeline stage tracking
 ├── task/          # Polymorphic task management, comments, recurrence engine
+├── activity/      # Decoupled transaction audit logs
+├── dashboard/     # Role-based aggregated metrics controller
 ├── common/        # Shared base entities, filters, exceptions, UUIDv7 generator
 ```
-
----
-
-## 🔒 Security Configuration
-Our REST API is completely stateless and protects all endpoints. 
-*   **CORS**: Non-wildcard whitelist origin verification.
-*   **CSRF**: Disabled since stateless authorization headers are used.
-*   **XSS Protection**: Secure headers included:
-    *   `Content-Security-Policy`: frame-ancestors 'none'
-    *   `X-Frame-Options`: DENY
-    *   `X-Content-Type-Options`: nosniff
-    *   `Permissions-Policy`: restrictive geo/camera/microphone access
-*   **Cache-Control**: `no-store` headers configured on authentication endpoints to prevent caching credentials.
 
 ---
 
@@ -83,10 +80,22 @@ Our REST API is completely stateless and protects all endpoints.
              |
              |
              v
-   +-------------------+
-   |   SESSION_LOGS    |
-   | (Device, IP, UA)  |
-   +-------------------+
+   +-------------------+          +--------------------+
+   |   SESSION_LOGS    |          |    LEAD / CUST     |
+   | (Device, IP, UA)  |          | (Soft Deleted)     |
+   +-------------------+          +--------------------+
+                                             |
+                                             v
+                                  +--------------------+          +--------------------+
+                                  |       TASKS        | <------  |   TASK_COMMENTS    |
+                                  | (Polymorphic, Rec) |          | (taskId)           |
+                                  +--------------------+          +--------------------+
+                                             |
+                                             v
+                                  +--------------------+
+                                  |   ACTIVITY_LOGS    |
+                                  | (JSONB Audit Event)|
+                                  +--------------------+
 ```
 
 ---
@@ -124,36 +133,37 @@ The application will boot up on `http://localhost:8080`.
 
 ## 📈 REST API Documentation
 
-### Authentication Routes (`/api/v1/auth`)
+### REST API Routes Index
 
-| Endpoint | Method | Access | Description |
-| :--- | :--- | :--- | :--- |
-| `/register` | `POST` | Public | Registers a new user (admin/sales manager/sales executive). |
-| `/login` | `POST` | Public | Validates credentials, creates JWT pair, updates session logs. |
-| `/refresh` | `POST` | Public | Performs Refresh Token Rotation (RTR) returning new JWT pair. |
-| `/logout` | `POST` | Authed | Invalidates active refresh token in the database. |
+#### 1. Authentication (`/api/v1/auth`)
+*   `POST /register`: Registers a new user.
+*   `POST /login`: Validates credentials and returns JWT pair.
+*   `POST /refresh`: Performs Refresh Token Rotation.
+*   `POST /logout`: Invalidates active refresh token.
 
-#### Sample Login Request JSON
-```json
-{
-  "email": "sales.rep@example.com",
-  "password": "StrongPassword123!"
-}
-```
+#### 2. Customers (`/api/v1/customers`)
+*   `GET /`: Paginated search (companyName, customerStatus, tag, size, range, rep).
+*   `POST /`: Creates a customer.
+*   `GET /{id}`: Retrieves customer details.
+*   `PUT /{id}`: Updates customer.
+*   `DELETE /{id}`: Soft deletes customer.
+*   `PUT /{id}/restore`: Restores soft-deleted customer (checks active tax ID conflicts).
+*   `PUT /{id}/assign`: Reassigns customer owner (Admin/Manager only).
 
-#### Sample Successful API Response Envelope
-```json
-{
-  "success": true,
-  "message": "Login successful",
-  "data": {
-    "accessToken": "eyJhbGciOiJIUzI1NiIsIn...",
-    "refreshToken": "70929283-f38b-4b2a...",
-    "userId": "0190c1f4-3d04-7c30-9b36-bf4ad865768e",
-    "email": "sales.rep@example.com",
-    "role": "SALES_EXECUTIVE"
-  },
-  "timestamp": "2026-07-18T14:04:12",
-  "traceId": "0190c1f4-3d04-7c30-9b36-bf4ad865768e"
-}
-```
+#### 3. Leads (`/api/v1/leads`)
+*   `GET /`: Paginated search (status, source, email, tags, rep).
+*   `POST /`: Creates a lead.
+*   `PUT /{id}/status`: Validates state transition and updates status.
+*   `PUT /{id}/assign`: Reassigns lead owner (Admin/Manager only).
+*   `DELETE /{id}`: Soft deletes lead.
+*   `POST /{id}/convert`: Executes the conversion transaction, generating Customer, primary Contact, and optional Opportunity inside a single transaction.
+
+#### 4. Tasks (`/api/v1/tasks`)
+*   `POST /`: Creates task.
+*   `PUT /{id}`: Updates task (triggering recurrence engine on completion).
+*   `DELETE /{id}`: Soft deletes task.
+*   `POST /{id}/comments`: Adds note comment to task.
+*   `GET /{id}/comments`: Retrieves comments thread.
+
+#### 5. Dashboard (`/api/v1/dashboard`)
+*   `GET /metrics`: Aggregates win rate, conversion rate, pipeline value, overdue task count, and monthly acquisition trends.
