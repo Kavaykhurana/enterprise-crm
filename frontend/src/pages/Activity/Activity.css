@@ -1,0 +1,108 @@
+.timeline-container {
+  position: relative;
+  padding: 40px 24px;
+}
+
+.timeline-line {
+  position: absolute;
+  top: 40px;
+  bottom: 40px;
+  left: 44px;
+  width: 2px;
+  background-color: var(--border-color);
+}
+
+.timeline-event {
+  position: relative;
+  display: flex;
+  margin-bottom: 32px;
+  padding-left: 56px;
+}
+
+.timeline-event:last-child {
+  margin-bottom: 0;
+}
+
+/* Timeline anchor circles */
+.timeline-icon-anchor {
+  position: absolute;
+  left: 10px;
+  top: 4px;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  border: 4px solid var(--bg-secondary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 2;
+}
+
+.timeline-icon-anchor.converted { background-color: var(--primary); color: #ffffff; }
+.timeline-icon-anchor.customer { background-color: var(--color-success); color: #ffffff; }
+.timeline-icon-anchor.task { background-color: var(--color-info); color: #ffffff; }
+.timeline-icon-anchor.security { background-color: var(--color-danger); color: #ffffff; }
+.timeline-icon-anchor.default { background-color: var(--text-muted); color: #ffffff; }
+
+/* Timeline text cards */
+.timeline-content-bubble {
+  background-color: var(--bg-tertiary);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-lg);
+  padding: 20px;
+  flex: 1;
+  box-shadow: var(--shadow-sm);
+  transition: border-color var(--transition-fast);
+}
+
+.timeline-content-bubble:hover {
+  border-color: var(--border-hover);
+}
+
+.timeline-event-header {
+  margin-bottom: 8px;
+}
+
+.event-title {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.event-time {
+  font-size: 12px;
+  color: var(--text-muted);
+}
+
+.event-actor-row {
+  font-size: 13px;
+  color: var(--text-secondary);
+  margin-bottom: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.event-entity-badge {
+  font-size: 11px;
+  font-family: monospace;
+  background-color: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+  padding: 2px 6px;
+  border-radius: var(--radius-sm);
+}
+
+.event-payload-box {
+  background-color: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  padding: 12px;
+  overflow-x: auto;
+}
+
+.payload-json {
+  font-family: 'Courier New', Courier, monospace;
+  font-size: 12px;
+  color: var(--text-primary);
+  white-space: pre-wrap;
+}
