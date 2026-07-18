@@ -1,0 +1,34 @@
+services:
+  - type: web
+    name: enterprise-crm-api
+    runtime: docker
+    dockerfilePath: ./Dockerfile
+    dockerContext: .
+    region: oregon
+    plan: free
+    healthCheckPath: /actuator/health
+    envVars:
+      - key: SPRING_PROFILES_ACTIVE
+        value: prod
+      - key: DATABASE_URL
+        fromDatabase:
+          name: enterprise-crm-db
+          property: connectionString
+      - key: JWT_SECRET
+        value: e0c1df2c430f0de89fd99477b933061dbe91dc2c4c30270fc961b9e9df08bd4409dbcd1b1a08a148208359cecad44ed5d9e752174fef33feb4d3969b9f82b584
+      - key: JWT_ACCESS_EXPIRATION_MS
+        value: "900000"
+      - key: JWT_REFRESH_EXPIRATION_MS
+        value: "604800000"
+      - key: CORS_ALLOWED_ORIGINS
+        value: https://enterprise-crm-mu.vercel.app
+      - key: PORT
+        value: "8080"
+
+databases:
+  - name: enterprise-crm-db
+    databaseName: enterprise_crm
+    user: crm_user
+    plan: free
+    region: oregon
+    postgresMajorVersion: 16
