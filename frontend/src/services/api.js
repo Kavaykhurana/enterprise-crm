@@ -73,8 +73,8 @@ api.interceptors.response.use(
       }
 
       try {
-        // Run refresh request using a clean Axios instance to bypass interceptors
-        const response = await axios.post('http://localhost:8080/api/v1/auth/refresh', {
+        const baseURL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8080';
+        const response = await axios.post(`${baseURL}/api/v1/auth/refresh`, {
           refreshToken: refreshToken,
         });
 
