@@ -9,8 +9,6 @@ import org.springframework.stereotype.Component;
 
 import java.io.IOException;
 
-@Component
-@Order(Ordered.HIGHEST_PRECEDENCE)
 public class CustomCorsFilter implements Filter {
 
     @Override
