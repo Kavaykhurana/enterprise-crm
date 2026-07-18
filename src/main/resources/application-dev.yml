@@ -1,0 +1,18 @@
+spring:
+  datasource:
+    url: jdbc:postgresql://localhost:5432/crm_db
+    username: postgres
+    password: postgres
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: true
+    properties:
+      hibernate:
+        format_sql: true
+
+app:
+  jwt:
+    secret: ${JWT_SECRET:9a4f2c8d3b7a1e5f8c6b4d2a1c0e9f8a7b6c5d4e3f2a1b0c9d8e7f6a5b4c3d2e1}
+    access-expiration-ms: 900000
+    refresh-expiration-ms: 604800000
