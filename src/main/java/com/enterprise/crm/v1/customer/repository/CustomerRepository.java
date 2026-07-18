@@ -19,4 +19,6 @@ public interface CustomerRepository extends JpaRepository<Customer, UUID>, JpaSp
 
     @Query(value = "SELECT EXISTS(SELECT 1 FROM customers WHERE tax_identifier = ?1 AND deleted_at IS NULL)", nativeQuery = true)
     boolean existsActiveTaxIdentifier(String taxIdentifier);
+
+    java.util.List<Customer> findByAssignedSalesRepId(UUID assignedSalesRepId);
 }

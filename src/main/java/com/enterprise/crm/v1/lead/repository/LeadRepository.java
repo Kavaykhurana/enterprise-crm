@@ -13,4 +13,8 @@ import java.util.UUID;
 public interface LeadRepository extends JpaRepository<Lead, UUID>, JpaSpecificationExecutor<Lead> {
     @Query(value = "SELECT * FROM leads WHERE id = ?1", nativeQuery = true)
     Optional<Lead> findByIdWithSoftDeleted(UUID id);
+
+    long countByAssignedSalesRepId(UUID assignedSalesRepId);
+    long countByConvertedCustomerIdNotNull();
+    long countByAssignedSalesRepIdAndConvertedCustomerIdNotNull(UUID assignedSalesRepId);
 }
