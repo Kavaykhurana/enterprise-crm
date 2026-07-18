@@ -100,34 +100,30 @@ com.enterprise.crm.v1
 
 ---
 
-## 🚀 How to Run Locally
+## 🌐 Production Deployment Architecture
 
-### Prerequisites
-*   JDK 21 or JDK 25 installed.
-*   Maven 3.9+ installed.
-*   Local PostgreSQL instance running on port `5432` with a database named `crm_db`.
-
-### 1. Clone & Configure Properties
-Configure the database user and password via environment variables or replace them in `src/main/resources/application-dev.yml`:
-```yaml
-spring:
-  datasource:
-    url: jdbc:postgresql://localhost:5432/crm_db
-    username: postgres
-    password: password
 ```
-
-### 2. Build and Test
-Run compilation and verify using the H2 in-memory test suite:
-```bash
-mvn clean test
+                                  [ HTTPS Request ]
+                                          |
+                                          v
+                              +-----------------------+
+                              |   Vercel Edge CDN     |  (Frontend React SPA)
+                              |   (https://*.vercel)  |
+                              +-----------------------+
+                                          |
+                                          | (REST / CORS Authorized)
+                                          v
+                              +-----------------------+
+                              |   Railway App Engine  |  (Spring Boot REST API)
+                              |  (https://*.railway)  |
+                              +-----------------------+
+                                          |
+                                          | (Internal connection)
+                                          v
+                              +-----------------------+
+                              |  Railway PostgreSQL   |  (Postgres database)
+                              +-----------------------+
 ```
-
-### 3. Run Application
-```bash
-mvn spring-boot:run
-```
-The application will boot up on `http://localhost:8080`.
 
 ---
 
@@ -139,7 +135,7 @@ The application will boot up on `http://localhost:8080`.
 *   `POST /register`: Registers a new user.
 *   `POST /login`: Validates credentials and returns JWT pair.
 *   `POST /refresh`: Performs Refresh Token Rotation.
-*   `POST /logout`: Invalidates active refresh token.
+*   `POST /logout`: Invalidate active refresh token.
 
 #### 2. Customers (`/api/v1/customers`)
 *   `GET /`: Paginated search (companyName, customerStatus, tag, size, range, rep).
@@ -167,3 +163,32 @@ The application will boot up on `http://localhost:8080`.
 
 #### 5. Dashboard (`/api/v1/dashboard`)
 *   `GET /metrics`: Aggregates win rate, conversion rate, pipeline value, overdue task count, and monthly acquisition trends.
+
+---
+
+## 🚀 Production Deployment Guide
+
+Follow these exact step-by-step instructions to deploy the backend and frontend to Railway and Vercel.
+
+### 1. Backend & Database Deployment (Railway)
+1.  Sign in to **[Railway.app](https://railway.app)**.
+2.  Click **New Project** > **Provision PostgreSQL**. This spawns a dedicated database.
+3.  Once the database is up, click **New** > **GitHub Repo** and select `enterprise-crm`.
+4.  Navigate to your new Service's **Settings** tab. Under **Nixpacks Configuration**, ensure it references the root folder (`/`). Nixpacks will automatically find `nixpacks.toml` and compile the Java JAR.
+5.  Go to the **Variables** tab and inject these values:
+    *   `SPRING_PROFILES_ACTIVE`: `prod`
+    *   `JWT_SECRET`: `[Generate a secure 512-bit random string]`
+    *   `CORS_ALLOWED_ORIGINS`: `https://your-frontend-subdomain.vercel.app` (Your Vercel URL)
+    *   `DATABASE_URL`, `DB_USERNAME`, `DB_PASSWORD` will be **automatically injected** by Railway from the PostgreSQL plugin connection block.
+6.  Click **Generate Domain** under the service's settings to expose the public endpoint (e.g. `https://your-crm-backend.up.railway.app`).
+
+### 2. Frontend Deployment (Vercel)
+1.  Sign in to **[Vercel.com](https://vercel.com)**.
+2.  Click **Add New** > **Project** > Import the `enterprise-crm` repository.
+3.  Under **Project Settings**:
+    *   **Root Directory**: Set to `frontend`.
+    *   **Framework Preset**: Select **Vite**.
+4.  Expand the **Environment Variables** panel and add:
+    *   `VITE_API_BASE_URL`: `https://your-crm-backend.up.railway.app` (Exposed Railway Domain)
+5.  Click **Deploy**. Vercel will build the SPA, bundle assets, and apply `vercel.json` routing rewrites automatically.
+
