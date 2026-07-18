@@ -20,8 +20,8 @@ import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 import org.springframework.web.filter.CorsFilter;
-import org.springframework.security.config.annotation.web.configuration.WebSecurityCustomizer;
-
+import org.springframework.boot.web.servlet.FilterRegistrationBean;
+import org.springframework.core.Ordered;
 import java.util.Collections;
 import java.util.List;
 
@@ -66,5 +66,12 @@ public class SecurityConfig {
     @Bean
     public AuthenticationManager authenticationManager(AuthenticationConfiguration config) throws Exception {
         return config.getAuthenticationManager();
+    }
+
+    @Bean
+    public FilterRegistrationBean<CustomCorsFilter> customCorsFilterRegistration(CustomCorsFilter filter) {
+        FilterRegistrationBean<CustomCorsFilter> registration = new FilterRegistrationBean<>(filter);
+        registration.setOrder(Ordered.HIGHEST_PRECEDENCE);
+        return registration;
     }
 }
