@@ -9,6 +9,8 @@ spring:
     hibernate:
       ddl-auto: create-drop
     show-sql: false
+  flyway:
+    enabled: false
   security:
     jwt:
       secret: 9a4f2c8d3b7a1e5f8c6b4d2a1c0e9f8a7b6c5d4e3f2a1b0c9d8e7f6a5b4c3d2e1
@@ -24,3 +26,9 @@ app:
     allowed-origins: http://localhost:5173
   rate-limiting:
     enabled: false
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
