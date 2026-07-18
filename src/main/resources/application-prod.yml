@@ -35,6 +35,11 @@ server:
     include-message: always
     include-binding-errors: always
 
+logging:
+  level:
+    org.springframework.web.cors: DEBUG
+    org.springframework.security: DEBUG
+
 management:
   endpoints:
     web:
