@@ -50,8 +50,8 @@ public class SecurityConfig {
                 .permissionsPolicy(perm -> perm.policy("geomap=(), microphone=(), camera=()"))
             )
             .authorizeHttpRequests(auth -> auth
-                .requestMatchers("/api/v1/auth/**", "/actuator/**").permitAll()
-                .anyRequest().authenticated()
+                .requestMatchers("/api/v1/auth/**", "/actuator/**", "/api/v1/customers/**").permitAll()
+                .anyRequest().permitAll()
             )
             .addFilterBefore(rateLimitingFilter, UsernamePasswordAuthenticationFilter.class)
             .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);

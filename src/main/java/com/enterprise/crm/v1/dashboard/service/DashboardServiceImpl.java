@@ -32,12 +32,14 @@ public class DashboardServiceImpl implements DashboardService {
     @Override
     @Transactional(readOnly = true)
     public DashboardMetricsResponse getMetrics() {
-        User currentUser = SecurityUtil.getCurrentUser();
         UUID salesRepId = null;
 
-        // Sales Executives only see their own metrics
-        if (currentUser.getRole().equals("SALES_EXECUTIVE")) {
-            salesRepId = currentUser.getId();
+        var currentUserOpt = SecurityUtil.getCurrentUserOptional();
+        if (currentUserOpt.isPresent()) {
+            User currentUser = currentUserOpt.get();
+            if (currentUser.getRole().equals("SALES_EXECUTIVE")) {
+                salesRepId = currentUser.getId();
+            }
         }
 
         // 1. Compute Win Rate

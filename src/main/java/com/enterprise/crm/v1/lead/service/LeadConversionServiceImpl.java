@@ -85,6 +85,10 @@ public class LeadConversionServiceImpl implements LeadConversionService {
             }
             ConvertLeadRequest.OpportunityRequest oppReq = request.getOpportunity();
 
+            if (oppReq.getName() == null || oppReq.getName().trim().isEmpty()) {
+                throw new IllegalArgumentException("Opportunity name cannot be empty");
+            }
+
             Opportunity opportunity = new Opportunity();
             opportunity.setCustomerId(savedCustomer.getId());
             opportunity.setAssignedSalesRepId(oppReq.getAssignedSalesRepId() != null ? oppReq.getAssignedSalesRepId() : lead.getAssignedSalesRepId());

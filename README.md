@@ -5,6 +5,8 @@ An enterprise-grade Customer Relationship Management (CRM) backend service built
 [![Java 21](https://img.shields.io/badge/Java-21-orange.svg?style=flat-square)](https://www.oracle.com/java/)
 [![Spring Boot 3.3](https://img.shields.io/badge/Spring_Boot-3.3.1-brightgreen.svg?style=flat-square)](https://spring.io/projects/spring-boot)
 [![Spring Security 6](https://img.shields.io/badge/Spring_Security-6-blue.svg?style=flat-square)](https://spring.io/projects/spring-security)
+[![React](https://img.shields.io/badge/React-18-61DAFB.svg?style=flat-square)](https://reactjs.org/)
+[![Vite](https://img.shields.io/badge/Vite-5-646CFF.svg?style=flat-square)](https://vitejs.dev/)
 [![Database](https://img.shields.io/badge/PostgreSQL-16-blue.svg?style=flat-square)](https://www.postgresql.org/)
 [![License](https://img.shields.io/badge/License-MIT-blue.svg?style=flat-square)](LICENSE)
 
@@ -43,6 +45,7 @@ Core services publish Spring `ApplicationEvent` subclasses. Asynchronous `@Trans
 ---
 
 ## 🛠️ Technology Stack
+### Backend
 *   **Language**: Java 21 (LTS)
 *   **Framework**: Spring Boot 3.3.1 & Spring Security 6
 *   **ORM**: Hibernate 6 / Spring Data JPA
@@ -51,6 +54,13 @@ Core services publish Spring `ApplicationEvent` subclasses. Asynchronous `@Trans
 *   **Database**: PostgreSQL (Production) / H2 (In-memory Test)
 *   **Testing**: JUnit 5, MockMvc, Mockito
 *   **Linters**: Spotless (Google Java Style), Checkstyle, SpotBugs
+
+### Frontend
+*   **Framework**: React 18 with Vite 5
+*   **Routing**: React Router v6 (lazy-loaded routes)
+*   **Styling**: Tailwind CSS 3
+*   **Auth**: JWT access + refresh token management via Axios interceptors
+*   **State**: React Context (AuthContext), custom hooks
 
 ---
 
@@ -191,4 +201,37 @@ Follow these exact step-by-step instructions to deploy the backend and frontend 
 4.  Expand the **Environment Variables** panel and add:
     *   `VITE_API_BASE_URL`: `https://your-crm-backend.up.railway.app` (Exposed Railway Domain)
 5.  Click **Deploy**. Vercel will build the SPA, bundle assets, and apply `vercel.json` routing rewrites automatically.
+
+---
+
+## 🖥️ Development
+
+### Prerequisites
+- Java 21 (LTS)
+- Node.js 18+
+- PostgreSQL 16
+
+### Running Locally
+
+**Backend:**
+```bash
+# Start PostgreSQL and create database 'enterprise_crm'
+./mvnw spring-boot:run -Dspring-boot.run.profiles=dev
+```
+
+**Frontend:**
+```bash
+cd frontend
+npm install
+echo "VITE_API_BASE_URL=http://localhost:8080" > .env
+npm run dev
+```
+
+The backend serves the production frontend build at `http://localhost:8080` when `SPRING_PROFILES_ACTIVE=prod`. For development, run both servers independently — the Vite dev server proxies `/api` requests to the backend via the Vite proxy configuration in `frontend/vite.config.js`.
+
+### Security Model
+*   **Read endpoints** (`GET /api/v1/leads`, `/tasks`, `/dashboard/metrics`) are publicly accessible — no auth required.
+*   **Write endpoints** (`POST`, `PUT`, `DELETE`, lead conversion, status transitions) require `@PreAuthorize("isAuthenticated()")` — return **403** when unauthenticated.
+*   **Auth endpoints** (`/login`, `/register`, `/refresh`) are unauthenticated by design.
+*   Refresh and logout endpoints require the `refreshToken` in the request body alongside the `Authorization: Bearer <accessToken>` header.
 

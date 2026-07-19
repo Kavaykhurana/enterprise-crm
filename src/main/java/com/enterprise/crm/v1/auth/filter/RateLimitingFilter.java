@@ -27,13 +27,13 @@ public class RateLimitingFilter extends OncePerRequestFilter {
 
     private Bucket getAuthBucket(String ip) {
         return authLimiters.computeIfAbsent(ip, k -> Bucket.builder()
-                .addLimit(Bandwidth.classic(5, Refill.intervally(5, Duration.ofMinutes(1))))
+                .addLimit(Bandwidth.builder().capacity(5).refillGreedy(5, Duration.ofMinutes(1)).build())
                 .build());
     }
 
     private Bucket getApiBucket(String ip) {
         return apiLimiters.computeIfAbsent(ip, k -> Bucket.builder()
-                .addLimit(Bandwidth.classic(60, Refill.intervally(60, Duration.ofMinutes(1))))
+                .addLimit(Bandwidth.builder().capacity(60).refillGreedy(60, Duration.ofMinutes(1)).build())
                 .build());
     }
 

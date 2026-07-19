@@ -17,11 +17,12 @@ public class AuthorizationService {
             return;
         }
 
-        // Sales Executives must own the target record
         if (currentUser.getRole().equals("SALES_EXECUTIVE")) {
             if (assignedSalesRepId == null || !assignedSalesRepId.equals(currentUser.getId())) {
                 throw new AccessDeniedException("Access denied: You are not authorized to access this record.");
             }
+        } else {
+            throw new AccessDeniedException("Access denied: Unknown role " + currentUser.getRole());
         }
     }
 }

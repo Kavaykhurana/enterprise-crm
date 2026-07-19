@@ -90,10 +90,10 @@ public class LeadServiceImpl implements LeadService {
             String email,
             Pageable pageable) {
 
-        com.enterprise.crm.v1.user.entity.User currentUser = com.enterprise.crm.v1.common.auth.SecurityUtil.getCurrentUser();
         UUID repFilterId = assignedSalesRepId;
-        if (currentUser.getRole().equals("SALES_EXECUTIVE")) {
-            repFilterId = currentUser.getId();
+        var currentUserOpt = com.enterprise.crm.v1.common.auth.SecurityUtil.getCurrentUserOptional();
+        if (currentUserOpt.isPresent() && currentUserOpt.get().getRole().equals("SALES_EXECUTIVE")) {
+            repFilterId = currentUserOpt.get().getId();
         }
 
         Specification<Lead> spec = LeadSpecification.filter(

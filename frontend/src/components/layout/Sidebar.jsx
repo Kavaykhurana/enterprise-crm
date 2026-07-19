@@ -37,6 +37,8 @@ const Sidebar = () => {
     navItems.push({ to: '/admin', label: 'Admin', icon: ShieldCheck });
   }
 
+  if (!user) return null;
+
   return (
     <aside className={`sidebar ${isCollapsed ? 'collapsed' : ''}`}>
       <div className="sidebar-header">

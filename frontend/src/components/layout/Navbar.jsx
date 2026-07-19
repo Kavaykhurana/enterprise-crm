@@ -59,33 +59,35 @@ const Navbar = () => {
         </div>
 
         {/* User Profile */}
-        <div className="profile-dropdown-wrapper">
-          <button className="profile-trigger" onClick={() => setShowProfileDropdown(!showProfileDropdown)}>
-            <div className="profile-avatar">{getInitials(user?.email)}</div>
-            <div className="profile-info-text">
-              <span className="profile-email">{user?.email}</span>
-              <span className="profile-role">{user?.role}</span>
-            </div>
-            <ChevronDown size={16} />
-          </button>
-
-          {showProfileDropdown && (
-            <div className="profile-dropdown">
-              <div className="dropdown-user-header">
-                <p className="dropdown-username">{user?.email}</p>
-                <p className="dropdown-userrole">{user?.role}</p>
+        {user && (
+          <div className="profile-dropdown-wrapper">
+            <button className="profile-trigger" onClick={() => setShowProfileDropdown(!showProfileDropdown)}>
+              <div className="profile-avatar">{getInitials(user.email)}</div>
+              <div className="profile-info-text">
+                <span className="profile-email">{user.email}</span>
+                <span className="profile-role">{user.role}</span>
               </div>
-              <a href="/profile" className="dropdown-link">
-                <User size={16} />
-                <span>My Profile</span>
-              </a>
-              <button className="dropdown-link logout-link" onClick={logout}>
-                <LogOut size={16} />
-                <span>Logout</span>
-              </button>
-            </div>
-          )}
-        </div>
+              <ChevronDown size={16} />
+            </button>
+
+            {showProfileDropdown && (
+              <div className="profile-dropdown">
+                <div className="dropdown-user-header">
+                  <p className="dropdown-username">{user.email}</p>
+                  <p className="dropdown-userrole">{user.role}</p>
+                </div>
+                <a href="/profile" className="dropdown-link">
+                  <User size={16} />
+                  <span>My Profile</span>
+                </a>
+                <button className="dropdown-link logout-link" onClick={logout}>
+                  <LogOut size={16} />
+                  <span>Logout</span>
+                </button>
+              </div>
+            )}
+          </div>
+        )}
       </div>
     </header>
   );

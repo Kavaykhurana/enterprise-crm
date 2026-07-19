@@ -8,10 +8,12 @@ import lombok.RequiredArgsConstructor;
 import org.slf4j.MDC;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/v1/tasks")
@@ -21,6 +23,7 @@ public class TaskController {
     private final TaskService taskService;
 
     @PostMapping
+    @PreAuthorize("isAuthenticated()")
     public ResponseEntity<ApiResponse<TaskResponse>> createTask(@Valid @RequestBody CreateTaskRequest request) {
         String traceId = MDC.get("traceId");
         TaskResponse response = taskService.createTask(request);
@@ -28,7 +31,16 @@ public class TaskController {
                 .body(ApiResponse.success("Task created successfully", response, traceId));
     }
 
+    @GetMapping
+    public ResponseEntity<ApiResponse<List<TaskResponse>>> searchTasks(
+            @RequestParam(required = false) UUID assignedUserId) {
+        String traceId = MDC.get("traceId");
+        List<TaskResponse> tasks = taskService.searchTasks(assignedUserId);
+        return ResponseEntity.ok(ApiResponse.success("Tasks retrieved successfully", tasks, traceId));
+    }
+
     @PutMapping("/{id}")
+    @PreAuthorize("isAuthenticated()")
     public ResponseEntity<ApiResponse<TaskResponse>> updateTask(
             @PathVariable UUID id,
             @Valid @RequestBody CreateTaskRequest request) {
@@ -45,12 +57,14 @@ public class TaskController {
     }
 
     @DeleteMapping("/{id}")
+    @PreAuthorize("isAuthenticated()")
     public ResponseEntity<Void> deleteTask(@PathVariable UUID id) {
         taskService.deleteTask(id);
         return ResponseEntity.noContent().build();
     }
 
     @PostMapping("/{id}/comments")
+    @PreAuthorize("isAuthenticated()")
     public ResponseEntity<ApiResponse<TaskCommentResponse>> addComment(
             @PathVariable UUID id,
             @Valid @RequestBody TaskCommentRequest request) {

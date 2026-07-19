@@ -2,6 +2,7 @@ package com.enterprise.crm.v1.task.service;
 
 import com.enterprise.crm.v1.common.auth.AuthorizationService;
 import com.enterprise.crm.v1.common.auth.SecurityUtil;
+import com.enterprise.crm.v1.common.dto.PageResponse;
 import com.enterprise.crm.v1.customer.repository.CustomerRepository;
 import com.enterprise.crm.v1.lead.repository.LeadRepository;
 import com.enterprise.crm.v1.task.dto.*;
@@ -119,6 +120,28 @@ public class TaskServiceImpl implements TaskService {
 
         return taskCommentRepository.findByTaskId(taskId).stream()
                 .map(taskMapper::commentToResponse)
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<TaskResponse> searchTasks(UUID assignedUserId) {
+        UUID effectiveUserId = assignedUserId;
+
+        var currentUserOpt = SecurityUtil.getCurrentUserOptional();
+        if (currentUserOpt.isPresent()) {
+            User currentUser = currentUserOpt.get();
+            if (!currentUser.getRole().equals("ADMIN") && !currentUser.getRole().equals("SALES_MANAGER")) {
+                effectiveUserId = currentUser.getId();
+            }
+        }
+
+        List<Task> tasks = effectiveUserId != null
+                ? taskRepository.findByAssignedUserId(effectiveUserId)
+                : taskRepository.findAll();
+
+        return tasks.stream()
+                .map(taskMapper::taskToResponse)
                 .collect(Collectors.toList());
     }
 

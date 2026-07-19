@@ -4,12 +4,25 @@ import com.enterprise.crm.v1.user.entity.User;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.core.context.SecurityContextHolder;
 
+import java.util.Optional;
+
 public class SecurityUtil {
     public static User getCurrentUser() {
         var auth = SecurityContextHolder.getContext().getAuthentication();
         if (auth == null || auth.getPrincipal() == null || "anonymousUser".equals(auth.getPrincipal())) {
             throw new AccessDeniedException("User is not authenticated");
         }
+        if (!(auth.getPrincipal() instanceof User)) {
+            throw new AccessDeniedException("User is not authenticated");
+        }
         return (User) auth.getPrincipal();
+    }
+
+    public static Optional<User> getCurrentUserOptional() {
+        try {
+            return Optional.of(getCurrentUser());
+        } catch (AccessDeniedException e) {
+            return Optional.empty();
+        }
     }
 }

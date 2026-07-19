@@ -12,4 +12,5 @@ public interface TaskService {
     void deleteTask(UUID id);
     TaskCommentResponse addComment(UUID taskId, TaskCommentRequest request);
     List<TaskCommentResponse> getComments(UUID taskId);
+    List<TaskResponse> searchTasks(UUID assignedUserId);
 }

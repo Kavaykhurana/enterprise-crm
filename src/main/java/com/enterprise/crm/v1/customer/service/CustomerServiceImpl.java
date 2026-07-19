@@ -93,15 +93,8 @@ public class CustomerServiceImpl implements CustomerService {
             String taxIdentifier,
             Pageable pageable) {
 
-        // For Sales Executive role, force filter only assigned rep records
-        com.enterprise.crm.v1.user.entity.User currentUser = com.enterprise.crm.v1.common.auth.SecurityUtil.getCurrentUser();
-        UUID repFilterId = assignedSalesRepId;
-        if (currentUser.getRole().equals("SALES_EXECUTIVE")) {
-            repFilterId = currentUser.getId();
-        }
-
         Specification<Customer> spec = CustomerSpecification.filter(
-                companyName, customerStatus, repFilterId, tag,
+                companyName, customerStatus, assignedSalesRepId, tag,
                 startCreated, endCreated, startUpdated, endUpdated,
                 companySize, taxIdentifier
         );

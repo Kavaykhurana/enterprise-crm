@@ -30,6 +30,7 @@ public class LeadController {
     private final LeadConversionService leadConversionService;
 
     @PostMapping("/{id}/convert")
+    @PreAuthorize("isAuthenticated()")
     public ResponseEntity<ApiResponse<ConversionResponse>> convertLead(
             @PathVariable UUID id,
             @Valid @RequestBody ConvertLeadRequest request) {
@@ -40,6 +41,7 @@ public class LeadController {
     }
 
     @PostMapping
+    @PreAuthorize("isAuthenticated()")
     public ResponseEntity<ApiResponse<LeadResponse>> createLead(@Valid @RequestBody CreateLeadRequest request) {
         String traceId = MDC.get("traceId");
         LeadResponse response = leadService.createLead(request);
@@ -48,6 +50,7 @@ public class LeadController {
     }
 
     @PutMapping("/{id}")
+    @PreAuthorize("isAuthenticated()")
     public ResponseEntity<ApiResponse<LeadResponse>> updateLead(
             @PathVariable UUID id,
             @Valid @RequestBody CreateLeadRequest request) {
@@ -93,6 +96,7 @@ public class LeadController {
     }
 
     @PutMapping("/{id}/status")
+    @PreAuthorize("isAuthenticated()")
     public ResponseEntity<ApiResponse<String>> updateLeadStatus(
             @PathVariable UUID id,
             @RequestParam String status) {
